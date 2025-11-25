@@ -1,0 +1,30 @@
+# Node
+node_modules
+npm-debug.log*
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+.next
+out
+dist
+coverage
+
+# Python
+*.pyc
+__pycache__/
+.venv/
+
+# Env
+.env
+.env.*
+*.env.local
+
+# Prisma
+server/prisma/dev.db
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
