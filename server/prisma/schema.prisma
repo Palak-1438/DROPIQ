@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("analyst") // admin | analyst
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  verificationToken String? @unique
+  verifiedAt   DateTime?
+  auditLogs    AuditLog[]
+  notifications Notification[]
+}
+
+model Customer {
+  id             Int      @id @default(autoincrement())
+  externalId     String?  @unique
+  name           String
+  email          String?
+  segment        String?
+  mrr            Float    @default(0)
+  status         String   @default("active")
+  churnScores    ChurnScore[]
+  retentionTasks RetentionTask[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ChurnScore {
+  id          Int      @id @default(autoincrement())
+  customer    Customer @relation(fields: [customerId], references: [id])
+  customerId  Int
+  probability Float
+  label       String
+  shapJson    String   // JSON explanation blob
+  createdAt   DateTime @default(now())
+}
+
+model RetentionTask {
+  id          Int      @id @default(autoincrement())
+  customer    Customer @relation(fields: [customerId], references: [id])
+  customerId  Int
+  title       String
+  description String
+  status      String   @default("open")
+  dueDate     DateTime?
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+  action    String
+  entity    String?
+  entityId  Int?
+  meta      String? // JSON
+  createdAt DateTime @default(now())
+}
+
+model ApiKey {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  label     String
+  createdAt DateTime @default(now())
+  active    Boolean  @default(true)
+}
+
+model Notification {
+  id          Int      @id @default(autoincrement())
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  type        String
+  message     String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
