@@ -1,0 +1,4 @@
+# Folder Structure
+
+- apps/
+- packages/

@@ -1,0 +1,3 @@
+# Contributing
+
+Follow conventional commits.
