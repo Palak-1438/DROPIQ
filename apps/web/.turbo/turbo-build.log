@@ -1,0 +1,35 @@
+
+> web@0.1.0 build
+> next build --turbopack
+
+   ▲ Next.js 15.5.19 (Turbopack)
+
+   Creating an optimized production build ...
+ ✓ Finished writing to disk in 51ms
+ ✓ Compiled successfully in 7.0s
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/10) ...
+   Generating static pages (2/10)
+   Generating static pages (4/10)
+   Generating static pages (7/10)
+ ✓ Generating static pages (10/10)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                         Size  First Load JS
+┌ ○ /                            3.42 kB         118 kB
+├ ○ /_not-found                      0 B         115 kB
+├ ○ /forgot-password               626 B         159 kB
+├ ○ /login                         668 B         159 kB
+├ ○ /register                      697 B         159 kB
+├ ○ /reset-password                715 B         159 kB
+└ ○ /verify-email                  414 B         126 kB
++ First Load JS shared by all     119 kB
+  ├ chunks/17f42cacc391e7ae.js   22.1 kB
+  ├ chunks/8082ab48faca5ea1.js   17.2 kB
+  ├ chunks/916276f450790128.js   59.2 kB
+  └ other shared chunks (total)    21 kB
+
+
+○  (Static)  prerendered as static content
