@@ -3,7 +3,45 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+}
+
+enum CustomerStatus {
+  LEAD
+  PROSPECT
+  ACTIVE
+  TRIAL
+  PAYING
+  INACTIVE
+  PAUSED
+  CHURNED
+  ARCHIVED
+}
+
+enum LifecycleStage {
+  LEAD
+  QUALIFIED
+  NEGOTIATION
+  ONBOARDING
+  ACTIVE
+  EXPANSION
+  RENEWAL
+  CHURN_RISK
+  CHURNED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
 }
 
 model Organization {
@@ -11,7 +49,10 @@ model Organization {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  users     User[]
+
+  users        User[]
+  customers    Customer[]
+  customerTags CustomerTag[]
 }
 
 model User {
@@ -21,10 +62,18 @@ model User {
   organization   Organization  @relation(fields: [organizationId], references: [id])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+
   roles          UserRole[]
   sessions       Session[]
   notifications  Notification[]
   auditLogs      AuditLog[]
+
+  ownedCustomers    Customer[]
+  authoredNotes     CustomerNote[]
+  assignedTasks     CustomerTask[] @relation("AssignedTasks")
+  createdTasks      CustomerTask[] @relation("CreatedTasks")
+  uploadedFiles     CustomerAttachment[]
+  customerActivities CustomerActivity[]
 }
 
 model Role {
@@ -96,4 +145,192 @@ model Settings {
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// -------------------------------------------------------------
+// Customer CRM Modules (Phase 3)
+// -------------------------------------------------------------
+
+model Customer {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  companyName    String
+  legalName      String?
+  website        String?
+  industry       String?
+  companySize    String?
+  annualRevenue  Float?
+  employeeCount  Int?
+
+  status         CustomerStatus @default(LEAD)
+  lifecycleStage LifecycleStage @default(LEAD)
+  source         String?
+
+  ownerId        String?
+  owner          User?    @relation(fields: [ownerId], references: [id])
+
+  description    String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  deletedAt      DateTime?
+
+  contacts       CustomerContact[]
+  addresses      CustomerAddress[]
+  tagRelations   CustomerTagRelation[]
+  notes          CustomerNote[]
+  tasks          CustomerTask[]
+  attachments    CustomerAttachment[]
+  activities     CustomerActivity[]
+
+  @@index([organizationId])
+  @@index([ownerId])
+  @@index([status])
+  @@index([lifecycleStage])
+}
+
+model CustomerContact {
+  id             String   @id @default(uuid())
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  firstName      String
+  lastName       String
+  email          String
+  phone          String?
+  mobile         String?
+  designation    String?
+  department     String?
+  linkedin       String?
+
+  isPrimary      Boolean  @default(false)
+
+  createdAt      DateTime @default(now())
+
+  @@index([customerId])
+  @@index([email])
+}
+
+model CustomerAddress {
+  id             String   @id @default(uuid())
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  country        String?
+  state          String?
+  city           String?
+  postalCode     String?
+  addressLine1   String?
+  addressLine2   String?
+
+  @@index([customerId])
+}
+
+model CustomerTag {
+  id             String   @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  name           String
+  color          String?
+
+  tagRelations   CustomerTagRelation[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+}
+
+model CustomerTagRelation {
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  tagId          String
+  tag            CustomerTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, tagId])
+  @@index([tagId])
+  @@index([customerId])
+}
+
+model CustomerNote {
+  id             String   @id @default(uuid())
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  authorId       String
+  author         User     @relation(fields: [authorId], references: [id])
+
+  title          String?
+  content        String
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([authorId])
+}
+
+model CustomerTask {
+  id             String   @id @default(uuid())
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  title          String
+  description    String?
+
+  assignedToId   String?
+  assignedTo     User?    @relation("AssignedTasks", fields: [assignedToId], references: [id])
+
+  dueDate        DateTime?
+  priority       TaskPriority @default(MEDIUM)
+  status         TaskStatus   @default(TODO)
+
+  createdById    String
+  createdBy      User     @relation("CreatedTasks", fields: [createdById], references: [id])
+
+  completedAt    DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([assignedToId])
+  @@index([status])
+}
+
+model CustomerAttachment {
+  id             String   @id @default(uuid())
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  filename       String
+  originalName   String
+  mimeType       String
+  size           Int
+  storagePath    String
+
+  uploadedById   String
+  uploadedBy     User     @relation(fields: [uploadedById], references: [id])
+
+  uploadedAt     DateTime @default(now())
+
+  @@index([customerId])
+}
+
+model CustomerActivity {
+  id             String   @id @default(uuid())
+  customerId     String
+  customer       Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id])
+
+  action         String
+  metadata       String?
+
+  createdAt      DateTime @default(now())
+
+  @@index([customerId])
+  @@index([userId])
 }

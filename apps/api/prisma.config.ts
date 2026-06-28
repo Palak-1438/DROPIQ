@@ -7,6 +7,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env.DATABASE_URL || "postgresql://dropiq:password@localhost:5432/dropiq",
+    url: process.env.DATABASE_URL_SQLITE || "file:./dev.db",
   },
 });

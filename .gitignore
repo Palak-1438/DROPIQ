@@ -1,14 +1,21 @@
 # Node
-node_modules
+node_modules/
+apps/api/node_modules/
+apps/web/node_modules/
+packages/ui/node_modules/
+packages/utils/node_modules/
+packages/types/node_modules/
+packages/config/node_modules/
 npm-debug.log*
 yarn.lock
 pnpm-lock.yaml
 
 # Build outputs
-.next
-out
-dist
-coverage
+.next/
+out/
+dist/
+coverage/
+.turbo/
 
 # Python
 *.pyc
@@ -22,6 +29,8 @@ __pycache__/
 
 # Prisma
 server/prisma/dev.db
+apps/api/dev.db
+dev.db
 
 # OS / editor
 .DS_Store
